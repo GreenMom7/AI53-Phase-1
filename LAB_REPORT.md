@@ -175,8 +175,8 @@ Result of the full `uv run --locked pytest -q` run:
 
 ### Run C
 
-- Single change chosen (dropout / augmentation / batch size): -
-- What I expect and why: -
+- Single change chosen (dropout / augmentation / batch size): Enable data augmentation
+- What I expect and why: Since `augmentation.enabled` is defined under `params`, this will trigger the reexecution of training process meanwhile for the `validate` and `prepare` stages will be skipped.
 - MLflow Run ID: -
 
 ### Comparison table (last-epoch validation scores)

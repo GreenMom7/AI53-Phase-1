@@ -1,7 +1,7 @@
 {
   "configuration": {
     "augmentation": {
-      "enabled": false,
+      "enabled": true,
       "horizontal_flip": 0.5,
       "rotation_degrees": 10
     },
@@ -9,7 +9,7 @@
     "dropout": 0.3,
     "epochs": 4,
     "image_size": 96,
-    "learning_rate": 0.003
+    "learning_rate": 0.001
   },
   "data": {
     "training_data_identity": "8fa943ff6c17a3c874d2b152e9d7980602a5cd50c0d8156625bd00590a3d8c6c"
@@ -26,11 +26,11 @@
   },
   "execution": {
     "device": "cpu",
-    "mlflow_run_id": "0d5f0c5d68674d5d803d1016c087b26f",
+    "mlflow_run_id": "e597555f674d43fd9f7d9a3f8d4b26db",
     "random_state": 42
   },
   "git": {
-    "commit": "576e0e2515a1e0f67632467cca1c5eb64d9e7e62",
+    "commit": "3b19a053f50c7e0766004c37c4c8514b11f6d16b",
     "dirty": true
   }
 }

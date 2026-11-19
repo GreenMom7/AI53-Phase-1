@@ -133,9 +133,9 @@ Result of the full `uv run --locked pytest -q` run:
 
 ### Decisions made before training
 
-- Main validation metric: -
-- Tie-break rule: -
-- What I expect a lower learning rate to change: -
+- Main validation metric: macro-F1
+- Tie-break rule: Accuracy
+- What I expect a lower learning rate to change: A smaller, more controlled gradient steps, preventing the optimizer from overshooting shallow minima on the small convolutional network
 
 ### Prediction table (before running)
 
@@ -177,24 +177,24 @@ Result of the full `uv run --locked pytest -q` run:
 
 - Single change chosen (dropout / augmentation / batch size): Enable data augmentation
 - What I expect and why: Since `augmentation.enabled` is defined under `params`, this will trigger the reexecution of training process meanwhile for the `validate` and `prepare` stages will be skipped.
-- MLflow Run ID: -
+- MLflow Run ID: e597555f674d43fd9f7d9a3f8d4b26db
 
 ### Comparison table (last-epoch validation scores)
 
-| Run | Controlled change | Val. Accuracy | Val. Macro-F1 | Training time | MLflow Run ID |
-| --- | ----------------- | ------------- | ------------- | ------------- | ------------- |
-| A   | Baseline          | -             | -             | -             | -             |
-| B   | -                 | -             | -             | -             | -             |
-| C   | -                 | -             | -             | -             | -             |
+| Run | Controlled change         | Val. Accuracy | Val. Macro-F1 | Training time | MLflow Run ID                    |
+| --- | ------------------------- | ------------- | ------------- | ------------- | -------------------------------- |
+| A   | Baseline                  | 0.654         | 0.642         | 5.857         | 6fa3cb3ceba44c0ba38a5802b7ef9502 |
+| B   | Learning rate = 0.003     | 0.692         | 0.677         | 5.703         | 0d5f0c5d68674d5d803d1016c087b26f |
+| C   | Data augmentation enabled | 0.662         | 0.649         | 5.763         | e597555f674d43fd9f7d9a3f8d4b26db |
 
-- B vs A: does the result support my prediction?: -
-- C vs A: does the result support my prediction?: -
-- Limitation (one seed, small validation set): -
+- B vs A: does the result support my prediction?: Yes, Run B improved validation accuracy from 0.654 to 0.662 and macro-F1 fro, 0.642 to 0.677
+- C vs A: does the result support my prediction?: Run C also improved accuracy of +0.8% and macro-F1 of +0.7% compared to run A.
+- Limitation (one seed, small validation set): The validation split contains only 133 images (~44 per class), meaning a difference of just a single correctly classified image shifts accuracy by ~0.75%. Additionally, all runs were evaluated with a single fixed seed (random_state: 42). The small margin between runs could be influenced by lucky weight initialization.
 
 ### Engineering Checkpoint 6
 
-- Why my primary metric suits this three-class problem: -
-- Why the test set is used only after choosing a model: -
+- Why my primary metric suits this three-class problem: Standard accuracy treats all predictions equally, meaning high accuracy can conceal a model that fails to detect one specific disease class. Macro-F1 computes the harmonic mean of precision and recall for each class independently and averages them with equal weight. This penalizes models that sacrifice performance on any individual disease category and provides an unskewed evaluation across all three classes.
+- Why the test set is used only after choosing a model: If the test set were evaluated during hyperparameter tuning or model comparison, test set feedback would directly influence model selection. The resulting test score would be optimistically biased.
 
 ---
 

@@ -156,17 +156,18 @@ Result of the full `uv run --locked pytest -q` run:
 | -------------------------------------- | -------- | ------- | ------ | -------- | ----------------------------------- |
 | 1. Rerun with no change                | REUSED   | REUSED  | REUSED | NOT RUN  | `Data and pipelines are up to date` |
 | 2. Comment added to `validate_data.py` | RERUN    | REUSED  | REUSED | NOT RUN  | `Running stage 'validate'`          |
-| 3. Learning rate set to 0.0003 (Run B) | -        | -       | -      | NOT RUN  | -                                   |
+| 3. Learning rate set to 0.0003 (Run B) | REUSED   | REUSED  | RERUN  | NOT RUN  | `Running stage 'train'`             |
 
-- Run B MLflow Run ID: -
-- Differences between predictions and results, and why: -
+- Run B MLflow Run ID: 0d5f0c5d68674d5d803d1016c087b26f
+- Differences between predictions and results: The actual behavior matches the predictions in the first table
 
 ### Engineering Checkpoint 5
 
 **Explanation of at least two rows (one setting change, one file edit):**
 
-- Setting change row: input that changes per stage: -
-- File edit row: why the inputs stay the same (or change) per stage: -
+- Setting change row: input that changes per stage:
+  `validate` and `prepare` do not track `train.learning_rate` in `dvc.yaml` under `params` so their hashes remain unchanged. `train` explicitly declares `train.learning_rate` under `params` which triggers re-execution
+- File edit row: why the inputs stay the same (or change) per stage: `validate` lists `src/validate_data.py` under `deps` so modifying the file forces validate to rerun. However, because the comment does not change the generated `reports/data_quality.json`, its content hash remains identical.
 
 ---
 

@@ -1,0 +1,89 @@
+stages:
+  validate:
+    cmd: uv run --locked python -m src.validate_data
+    deps:
+      - data/raw
+      - src/validate_data.py
+      - uv.lock
+      - pyproject.toml
+    outs:
+      - reports/data_quality.json:
+          cache: false
+
+  prepare:
+    cmd: uv run --locked python -m src.prepare
+    deps:
+      - reports/data_quality.json
+      - data/raw
+      - src/prepare.py
+      - uv.lock
+      - pyproject.toml
+    params:
+      - data.image_size
+    outs:
+      - data/processed
+      - reports/data_summary.json:
+          cache: false
+
+  train:
+    cmd: uv run --locked python -m src.train
+    deps:
+      - data/processed/train
+      - data/processed/validation
+      - data/processed/manifests/train.csv
+      - data/processed/manifests/validation.csv
+      - src/train.py
+      - src/data.py
+      - src/model.py
+      - src/provenance.py
+      - src/reproducibility.py
+      - uv.lock
+      - pyproject.toml
+    params:
+      - train.random_state
+      - train.batch_size
+      - train.dropout
+      - train.learning_rate
+      - train.epochs
+      - data.image_size
+      - compute.device
+      - augmentation.enabled
+      - augmentation.horizontal_flip
+      - augmentation.rotation_degrees
+      - tracking.uri
+      - tracking.experiment
+    outs:
+      - models/model.pt
+      - reports/train_summary.json:
+          cache: false
+      - reports/training_curves.png:
+          cache: false
+      - reports/run_manifest.json:
+          cache: false
+
+  evaluate:
+    cmd: uv run --locked python -m src.evaluate
+    deps:
+      - data/processed/test
+      - data/processed/manifests/train.csv
+      - data/processed/manifests/validation.csv
+      - data/processed/manifests/test.csv
+      - src/evaluate.py
+      - src/data.py
+      - src/provenance.py
+      - src/reproducibility.py
+      - uv.lock
+      - pyproject.toml
+    params:
+      - selection.run_id
+      - data.image_size
+      - compute.device
+      - evaluation.batch_size
+      - tracking.uri
+      - tracking.experiment
+    outs:
+      - reports/test_confusion_matrix.png:
+          cache: false
+    metrics:
+      - reports/test_metrics.json:
+          cache: false

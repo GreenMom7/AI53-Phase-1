@@ -6,3 +6,5 @@ __pycache__/
 .pytest_cache/
 mlflow.db
 mlruns/
+data/processed/
+models/*.pt

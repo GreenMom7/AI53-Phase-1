@@ -49,18 +49,170 @@ ware stack? Explain briefly._
 
 ### Engineering Checkpoint 3
 
-## Milestone 4 -
+**Question:** _In one sentence each, state what the Git remote stores, what the DVC remote stores,
+and whether git push transfers the DVC-managed raw images._
 
-### Engineering Checkpoint
+**Answer:**
 
-## Milestone 5 - ...
+- **Git remote (GitHub):** stores the code, configuration, commit history and the small `.dvc` pointer files, not the images themselves.
+- **DVC remote:** stores the actual raw image files (the large data), identified by the hash in `data/raw.dvc`.
+- **Does `git push` transfer the raw images?** No. It only sends the Git history, including the pointer file. The images are sent separately with `dvc push`.
 
-### Engineering Checkpoint
+## Milestone 4 - DVC Pipeline Design
 
-## Milestone 6 - ...
+### Answers to the dependency questions
 
-### Engineering Checkpoint
+- Should PREPARE depend on `reports/data_quality.json`? : Yes, in case there is presence of corrupt/bad data, the pipeline stops allwoing us to fix the issue before going to the training process.
+- Should PREPARE also depend directly on `data/raw`? : Yes, because the `prepare` process reads the images.
+- Which `params.yaml` changes should make TRAIN rerun?: It will rerun everytime any key under `params:` changes
+- Why should EVALUATE track `selection.run_id`?: Because the ID belongs to specific one model.
+- Which file holds the metrics?: Metric fill will be `reports/test_metrics.json`
 
-## Milestone 7 - ...
+### Stages
 
-### Engineering Checkpoint
+| Stage    | cmd                                           | deps                                                                                                                                                                                                                                                            | params                                                                                                                                                                                                                                                                | outs                                                                                                        | metrics                     |
+| -------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------- |
+| validate | `uv run --locked python -m src.validate_data` | `data/raw`, `src/validate_data.py`, `uv.lock`, `pyproject.toml`                                                                                                                                                                                                 | -                                                                                                                                                                                                                                                                     | `reports/data_quality.json`                                                                                 | -                           |
+| prepare  | `uv run --locked python -m src.prepare`       | `reports/data_quality.json`, `data/raw`, `src/prepare.py`, `uv.lock`, `pyproject.toml`                                                                                                                                                                          | `data.image_size`                                                                                                                                                                                                                                                     | `data/processed`, `reports/data_summary.json`                                                               | -                           |
+| train    | `uv run --locked python -m src.train`         | `data/processed/train`, `data/processed/validation`, `data/processed/manifests/train.csv`, `data/processed/manifests/validation.csv`, `src/train.py`, `src/data.py`, `src/model.py`, `src/provenance.py`, `src/reproducibility.py`, `uv.lock`, `pyproject.toml` | `train.random_state`, `train.batch_size`, `train.dropout`, `train.learning_rate`, `train.epochs`, `data.image_size`, `compute.device`, `augmentation.enabled`, `augmentation.horizontal_flip`, `augmentation.rotation_degrees`, `tracking.uri`, `tracking.experiment` | `models/model.pt`, `reports/train_summary.json`, `reports/training_curves.png`, `reports/run_manifest.json` | -                           |
+| evaluate | `uv run --locked python -m src.evaluate`      | `data/processed/test`, `data/processed/manifests/train.csv`, `data/processed/manifests/validation.csv`, `data/processed/manifests/test.csv`, `src/evaluate.py`, `src/data.py`, `src/provenance.py`, `src/reproducibility.py`, `uv.lock`, `pyproject.toml`       | `selection.run_id`, `data.image_size`, `compute.device`, `evaluation.batch_size`, `tracking.uri`, `tracking.experiment`                                                                                                                                               | `reports/test_confusion_matrix.png`                                                                         | `reports/test_metrics.json` |
+
+- Output of `dvc stage list`:
+  ```validate Outputs reports/data_quality.json
+  prepare   Outputs data/processed, reports/data_summary.json
+  train     Outputs models/model.pt, reports/train_summary.json, reports/training_curves.pn…
+  evaluate  Outputs reports/test_confusion_matrix.png; Reports reports/test_metrics.json
+  ```
+- Output of `dvc dag`:
+
+```
+        +--------------+
+        | data/raw.dvc |
+        +--------------+
+           **        **
+         **            **
+        *                **
++----------+               *
+| validate |             **
++----------+           **
+           **        **
+             **    **
+               *  *
+           +---------+
+           | prepare |
+           +---------+
+           **        **
+         **            **
+        *                *
+  +-------+         +----------+
+  | train |         | evaluate |
+  +-------+         +----------+
+```
+
+- Does EVALUATE avoid depending on TRAIN? : Yes, `evaluate` branches directly from `prepare`, completely decoupled from the `train` stage.
+
+## Milestone 5 - MLflow Run Records
+
+- What `run_manifest.json` records (Git, data, environment, settings, Run ID): -
+- Parameters, metrics and artifacts logged: -
+- Model logged (name, signature, input example, metadata): -
+- Result of the full `pytest` run: -
+
+### Engineering Checkpoint 4
+
+**Question:** In one sentence per tool, explain what Git, DVC and MLflow each record about a training Run.
+
+**Answer:**
+
+- Git: -
+- DVC: -
+- MLflow: -
+
+## Milestone 6 - Which Stages Rerun
+
+### Decisions made before training
+
+- Main validation metric: -
+- Tie-break rule: -
+- What I expect a lower learning rate to change: -
+
+### Prediction table (before running)
+
+| Change                                         | VALIDATE | PREPARE | TRAIN | EVALUATE |
+| ---------------------------------------------- | -------- | ------- | ----- | -------- |
+| Change `train.learning_rate`                   | ?        | ?       | ?     | ?        |
+| Change `data.image_size`                       | ?        | ?       | ?     | ?        |
+| Edit `src/validate_data.py` (report unchanged) | ?        | ?       | ?     | ?        |
+| Edit only `README.md`                          | ?        | ?       | ?     | ?        |
+
+### Run A (baseline)
+
+- MLflow Run ID: -
+
+### Actual results table (after running)
+
+| Check                                  | VALIDATE | PREPARE | TRAIN | EVALUATE | Terminal lines |
+| -------------------------------------- | -------- | ------- | ----- | -------- | -------------- |
+| 1. Rerun with no change                | -        | -       | -     | NOT RUN  | -              |
+| 2. Comment added to `validate_data.py` | -        | -       | -     | NOT RUN  | -              |
+| 3. Learning rate set to 0.0003 (Run B) | -        | -       | -     | NOT RUN  | -              |
+
+- Run B MLflow Run ID: -
+- Differences between predictions and results, and why: -
+
+### Engineering Checkpoint 5
+
+**Explanation of at least two rows (one setting change, one file edit):**
+
+- Setting change row: input that changes per stage: -
+- File edit row: why the inputs stay the same (or change) per stage: -
+
+---
+
+## Milestone 7 - Controlled Experiments
+
+### Run C
+
+- Single change chosen (dropout / augmentation / batch size): -
+- What I expect and why: -
+- MLflow Run ID: -
+
+### Comparison table (last-epoch validation scores)
+
+| Run | Controlled change | Val. Accuracy | Val. Macro-F1 | Training time | MLflow Run ID |
+| --- | ----------------- | ------------- | ------------- | ------------- | ------------- |
+| A   | Baseline          | -             | -             | -             | -             |
+| B   | -                 | -             | -             | -             | -             |
+| C   | -                 | -             | -             | -             | -             |
+
+- B vs A: does the result support my prediction?: -
+- C vs A: does the result support my prediction?: -
+- Limitation (one seed, small validation set): -
+
+### Engineering Checkpoint 6
+
+- Why my primary metric suits this three-class problem: -
+- Why the test set is used only after choosing a model: -
+
+---
+
+## Milestone 8 - Select and Test One Model
+
+### Selection
+
+- Selected Run ID: -
+- Score on the main metric: -
+- Other evidence used: -
+- One trade-off or limitation: -
+
+### Final test results
+
+- Run ID in `reports/test_metrics.json`: -
+- Test accuracy / macro-F1: -
+- Notes on the confusion matrix: -
+
+### Final checks
+
+- `pytest -q` result: -
+- `dvc status` result: -
+- GitHub repository URL: -

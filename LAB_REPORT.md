@@ -43,7 +43,7 @@ A trained model weight file (`model.pt`) is merely a static binary artifact repr
 **Question:** Does random_state=42 guarantee bit-for-bit identical results on every CPU/GPU/soft-
 ware stack? Explain briefly.
 
-**Answer:** [ANSWER NEEDED]
+**Answer:** No. A seed only fixes the starting point of the random numbers. Different CPUs, GPUs, operating systems or library versions (PyTorch, CUDA) can run the math in a different order, and floating-point results then differ slightly.
 
 ## Milestone 3 - Extract and track the images
 
@@ -209,12 +209,12 @@ Result of the full `uv run --locked pytest -q` run:
 
 ### Final test results
 
-- Run ID in `reports/test_metrics.json`: -
-- Test accuracy / macro-F1: -
-- Notes on the confusion matrix: -
+- Run ID in `reports/test_metrics.json`: 0d5f0c5d68674d5d803d1016c087b26f
+- Test accuracy / macro-F1: 0.6484 / 0.6471
+- Notes on the confusion matrix: The main diagonal dominates all three classes, showing consistent classification performance. The healthy class exhibits the highest recall with minimal confusion.
 
 ### Final checks
 
-- `pytest -q` result: -
-- `dvc status` result: -
+- `pytest -q` result: `19 passed in 3.03s`
+- `dvc status` result: `Data and pipelines are up to date.`
 - GitHub repository URL: -

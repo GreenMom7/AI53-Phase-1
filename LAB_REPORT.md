@@ -43,7 +43,7 @@ A trained model weight file (`model.pt`) is merely a static binary artifact repr
 **Question:** Does random_state=42 guarantee bit-for-bit identical results on every CPU/GPU/soft-
 ware stack? Explain briefly.
 
-**Answer:**
+**Answer:** [ANSWER NEEDED]
 
 ## Milestone 3 - Extract and track the images
 
@@ -125,9 +125,9 @@ Result of the full `uv run --locked pytest -q` run:
 
 **Answer:**
 
-- Git: records the exact code, configuration (`params.yaml`, `dvc.yaml`) and the small `.dvc` pointer files at a given commit, so the Run's source can be restored by its commit SHA.
-- DVC: records the data versions and pipeline state (hashes of inputs, parameters and outputs in `dvc.lock`), so it knows which data produced which outputs and which stages need to rerun.
-- MLflow: records the Run itself: its parameters, per-epoch metrics, training time, artifacts (reports, run manifest), the logged model with its signature, and the dataset input.
+- Git: records the exact code, configuration (`params.yaml`, `dvc.yaml`) and the small `.dvc` pointer files at a given commit, so the Run's source can be restored by its commit SHA
+- DVC: records the data versions and pipeline state (hashes of inputs, parameters and outputs in `dvc.lock`), so it knows which data produced which outputs and which stages need to rerun
+- MLflow: records the Run itself (its parameters, per-epoch metrics, training time, artifacts (reports, run manifest), the logged model with its signature, and the dataset input)
 
 ## Milestone 6 - Which Stages Rerun
 
@@ -139,24 +139,24 @@ Result of the full `uv run --locked pytest -q` run:
 
 ### Prediction table (before running)
 
-| Change                                         | VALIDATE | PREPARE | TRAIN | EVALUATE |
-| ---------------------------------------------- | -------- | ------- | ----- | -------- |
-| Change `train.learning_rate`                   | ?        | ?       | ?     | ?        |
-| Change `data.image_size`                       | ?        | ?       | ?     | ?        |
-| Edit `src/validate_data.py` (report unchanged) | ?        | ?       | ?     | ?        |
-| Edit only `README.md`                          | ?        | ?       | ?     | ?        |
+| Change                       | VALIDATE | PREPARE | TRAIN  | EVALUATE     |
+| ---------------------------- | -------- | ------- | ------ | ------------ |
+| Change `train.learning_rate` | REUSED   | REUSED  | RERUN  | REUSED       |
+| Change `data.image_size`     | REUSED   | RERUN   | RERUN  | NEEDS UPDATE |
+| Edit `src/validate_data.py`  | RERUN    | REUSED  | REUSED | REUSED       |
+| Edit only `README.md`        | REUSED   | REUSED  | REUSED | REUSED       |
 
 ### Run A (baseline)
 
-- MLflow Run ID: -
+- MLflow Run ID: 6fa3cb3ceba44c0ba38a5802b7ef9502
 
 ### Actual results table (after running)
 
-| Check                                  | VALIDATE | PREPARE | TRAIN | EVALUATE | Terminal lines |
-| -------------------------------------- | -------- | ------- | ----- | -------- | -------------- |
-| 1. Rerun with no change                | -        | -       | -     | NOT RUN  | -              |
-| 2. Comment added to `validate_data.py` | -        | -       | -     | NOT RUN  | -              |
-| 3. Learning rate set to 0.0003 (Run B) | -        | -       | -     | NOT RUN  | -              |
+| Check                                  | VALIDATE | PREPARE | TRAIN  | EVALUATE | Terminal lines                      |
+| -------------------------------------- | -------- | ------- | ------ | -------- | ----------------------------------- |
+| 1. Rerun with no change                | REUSED   | REUSED  | REUSED | NOT RUN  | `Data and pipelines are up to date` |
+| 2. Comment added to `validate_data.py` | RERUN    | REUSED  | REUSED | NOT RUN  | `Running stage 'validate'`          |
+| 3. Learning rate set to 0.0003 (Run B) | -        | -       | -      | NOT RUN  | -                                   |
 
 - Run B MLflow Run ID: -
 - Differences between predictions and results, and why: -

@@ -8,7 +8,7 @@ EXPECTED_SPLITS = {"train": 1034, "validation": 133, "test": 128}
 EXPECTED_CLASSES = {"angular_leaf_spot", "bean_rust", "healthy"}
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
-
+# DVC cache check: comment added
 def validate_dataset(raw_root: Path) -> dict:
     """Validate the raw dataset and return a deterministic quality report.
 

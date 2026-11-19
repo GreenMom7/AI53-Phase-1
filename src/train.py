@@ -13,7 +13,7 @@ import yaml
 
 import mlflow.data
 import mlflow.pytorch
-from ml.models import infer_signature
+from mlflow.models import infer_signature
 
 from sklearn.metrics import accuracy_score, f1_score
 from torch import nn
@@ -214,7 +214,7 @@ def main() -> None:
         dataset = mlflow.data.from_pandas(
             train_manifest_df,
             name = "bean-training",
-            target = "label"
+            targets = "label"
         )
         mlflow.log_input(dataset, context="training")
 
@@ -344,7 +344,7 @@ def main() -> None:
             signature = infer_signature(input_example, output_example)
             mlflow.pytorch.log_model(
                 pytorch_model=cpu_model,
-                artifact_path="bean-cnn",
+                name="bean-cnn",
                 signature=signature,
                 input_example=input_example,
                 serialization_format="pickle",
@@ -356,8 +356,7 @@ def main() -> None:
             )
 
         print(
-            "Training complete. Resolve every TODO block before "
-            "starting the controlled experiment comparison."
+            "Training complete."
         )
 
 

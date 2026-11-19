@@ -17,7 +17,7 @@
 
 ### Engineering Checkpoint 1
 
-**Question:** _Why is a working `model.pt` insufficient evidence that an experiment is reproducible?_
+**Question:** Why is a working `model.pt` insufficient evidence that an experiment is reproducible?
 
 **Answer:**
 A trained model weight file (`model.pt`) is merely a static binary artifact representing the final numerical state of the neural network weights. It does not provide any verifiable evidence of reproducibility because:
@@ -40,8 +40,8 @@ A trained model weight file (`model.pt`) is merely a static binary artifact repr
 
 ### Engineering Checkpoint 2
 
-**Question:** _Does random_state=42 guarantee bit-for-bit identical results on every CPU/GPU/soft-
-ware stack? Explain briefly._
+**Question:** Does random_state=42 guarantee bit-for-bit identical results on every CPU/GPU/soft-
+ware stack? Explain briefly.
 
 **Answer:**
 
@@ -60,13 +60,13 @@ and whether git push transfers the DVC-managed raw images._
 
 ## Milestone 4 - DVC Pipeline Design
 
-### Answers to the dependency questions
+### Questions
 
-- Should PREPARE depend on `reports/data_quality.json`? : Yes, in case there is presence of corrupt/bad data, the pipeline stops allwoing us to fix the issue before going to the training process.
+- Should PREPARE depend on `reports/data_quality.json`? : Yes, in case of any presence of corrupt/bad data, the pipeline stops allwoing us to fix the issue before going to the training process.
 - Should PREPARE also depend directly on `data/raw`? : Yes, because the `prepare` process reads the images.
-- Which `params.yaml` changes should make TRAIN rerun?: It will rerun everytime any key under `params:` changes
-- Why should EVALUATE track `selection.run_id`?: Because the ID belongs to specific one model.
-- Which file holds the metrics?: Metric fill will be `reports/test_metrics.json`
+- Which `params.yaml` changes should make TRAIN rerun? : It will rerun everytime any key under `params:` changes
+- Why should EVALUATE track `selection.run_id`? : Because the ID belongs to specific one model.
+- Which file holds the metrics? : Metric file will be `reports/test_metrics.json`
 
 ### Stages
 
@@ -113,10 +113,11 @@ and whether git push transfers the DVC-managed raw images._
 
 ## Milestone 5 - MLflow Run Records
 
-- What `run_manifest.json` records (Git, data, environment, settings, Run ID): -
-- Parameters, metrics and artifacts logged: -
-- Model logged (name, signature, input example, metadata): -
-- Result of the full `pytest` run: -
+Result of the full `uv run --locked pytest -q` run:
+
+```
+19 passed in 3.68s
+```
 
 ### Engineering Checkpoint 4
 
@@ -124,9 +125,9 @@ and whether git push transfers the DVC-managed raw images._
 
 **Answer:**
 
-- Git: -
-- DVC: -
-- MLflow: -
+- Git: records the exact code, configuration (`params.yaml`, `dvc.yaml`) and the small `.dvc` pointer files at a given commit, so the Run's source can be restored by its commit SHA.
+- DVC: records the data versions and pipeline state (hashes of inputs, parameters and outputs in `dvc.lock`), so it knows which data produced which outputs and which stages need to rerun.
+- MLflow: records the Run itself: its parameters, per-epoch metrics, training time, artifacts (reports, run manifest), the logged model with its signature, and the dataset input.
 
 ## Milestone 6 - Which Stages Rerun
 

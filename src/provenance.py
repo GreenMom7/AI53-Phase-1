@@ -2,8 +2,44 @@ from __future__ import annotations
 
 import hashlib
 import json
+import importlib.metadata
+import platform
+import subprocess
+import torch
 from pathlib import Path
 
+# helper functions for git and package version
+def get_git_info() -> tuple[str, bool]:
+    """Safely retrieve Git commit SHA and working-tree dirty status."""
+    try:
+        proc_commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        commit = proc_commit.stdout.strip() if proc_commit.returncode == 0 else "unavailable"
+
+        proc_status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        dirty = bool(proc_status.stdout.strip()) if proc_status.returncode == 0 else False
+    except Exception:
+        commit = "unavailable"
+        dirty = False
+
+    return commit, dirty
+
+
+def get_version(package_name: str) -> str:
+    """Safely query package version via importlib.metadata."""
+    try:
+        return importlib.metadata.version(package_name)
+    except Exception:
+        return "unavailable"
 
 def training_data_identity(
     train_manifest: Path = Path("data/processed/manifests/train.csv"),
@@ -42,7 +78,39 @@ def build_run_manifest(params: dict, device: str, mlflow_run_id: str) -> dict:
     Hints: subprocess, platform, importlib.metadata, torch,
     training_data_identity().
     """
-    raise NotImplementedError("Implement run provenance capture")
+    commit, dirty = get_git_info()
+    return {
+        "git": {
+            "commit": commit,
+            "dirty": dirty,
+        },
+        "data": {
+            "training_data_identity": training_data_identity(),
+        },
+        "environment": {
+            "platform": platform.platform(),
+            "python": platform.python_version(),
+            "torch": get_version("torch"),
+            "torchvision": get_version("torchvision"),
+            "dvc": get_version("dvc"),
+            "mlflow": get_version("mlflow"),
+            "cuda_available": torch.cuda.is_available(),
+            "cuda_version": torch.version.cuda if torch.cuda.is_available() else None,
+        },
+        "configuration": {
+            "image_size": int(params.get("data", {}).get("image_size", 96)),
+            "batch_size": int(params.get("train", {}).get("batch_size", 32)),
+            "epochs": int(params.get("train", {}).get("epochs", 4)),
+            "learning_rate": float(params.get("train", {}).get("learning_rate", 0.001)),
+            "dropout": float(params.get("train", {}).get("dropout", 0.3)),
+            "augmentation": params.get("augmentation", {}),
+        },
+        "execution": {
+            "device": str(device),
+            "random_state": int(params.get("train", {}).get("random_state", 42)),
+            "mlflow_run_id": str(mlflow_run_id),
+        },
+    }
 
 
 def write_run_manifest(params: dict, device: str, mlflow_run_id: str, path: Path) -> dict:

@@ -202,10 +202,10 @@ Result of the full `uv run --locked pytest -q` run:
 
 ### Selection
 
-- Selected Run ID: -
-- Score on the main metric: -
-- Other evidence used: -
-- One trade-off or limitation: -
+- Selected Run ID: 0d5f0c5d68674d5d803d1016c087b26f
+- Score on the main metric: 0.677
+- Other evidence used: Achieved highest accuracy and lowest validation loss across all epochs.
+- One trade-off or limitation: The model was trained only on 4 epochs on a small validation set
 
 ### Final test results
 
